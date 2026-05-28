@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FSM Washing Machine Lab — Mechatronics Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & ROOT ===== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#070b14;
+  --panel:#0c1220;
+  --card:#101826;
+  --card2:#131e2e;
+  --border:#1a2840;
+  --border2:#223050;
+  --accent:#00d4ff;
+  --accent2:#7b2fff;
+  --green:#00ff88;
+  --amber:#ffb300;
+  --red:#ff3355;
+  --orange:#ff6a00;
+  --text:#c0d0ee;
+  --muted:#3a5570;
+  --muted2:#4a6585;
+  --white:#e8f0ff;
+}
+html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; }
+
+/* ===== LAYOUT ===== */
+.app { display:grid; grid-template-columns:1fr 400px; grid-template-rows:48px 1fr; height:100vh; }
+.topbar { grid-column:1/-1; background:var(--panel); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:16px; z-index:10; }
+.topbar-title { font-family:'Exo 2',sans-serif; font-size:15px; font-weight:700; letter-spacing:2px; color:var(--white); text-transform:uppercase; }
+.topbar-title span { color:var(--accent); }
+.topbar-badge { font-size:10px; letter-spacing:1.5px; color:var(--muted2); border:1px solid var(--border2); padding:2px 8px; border-radius:10px; }
+.topbar-spacer { flex:1; }
+.topbar-state { font-family:'Share Tech Mono',monospace; font-size:12px; padding:4px 12px; border-radius:12px; border:1px solid; transition:all .4s; }
+
+/* ===== VIEWPORT ===== */
+.viewport {
+  position:relative; overflow:hidden;
+  background: radial-gradient(ellipse at 50% 100%, #0d1a2e 0%, #060b14 70%);
+}
+/* Grid floor */
+.vp-floor {
+  position:absolute; bottom:0; left:0; right:0; height:160px;
+  background:
+    repeating-linear-gradient(90deg,#1a3060 0,#1a3060 1px,transparent 1px,transparent 60px),
+    repeating-linear-gradient(0deg,#1a3060 0,#1a3060 1px,transparent 1px,transparent 60px);
+  opacity:.12; transform:perspective(300px) rotateX(40deg); transform-origin:bottom;
+}
+/* Ambient glow */
+.vp-glow { position:absolute; inset:0; pointer-events:none; transition:background 1s; }
+
+/* ===== MACHINE ===== */
+.machine-scene { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-bottom:40px; }
+.machine-wrap { position:relative; width:320px; }
+
+/* Countertop base */
+.counter { width:360px; height:18px; background:linear-gradient(to bottom,#1a2840,#101c30); border-radius:4px 4px 0 0; border:1px solid var(--border2); margin:0 auto 0; position:relative; left:-20px; }
+.counter::before { content:''; position:absolute; bottom:-6px; left:0; right:0; height:6px; background:#0c1520; }
+
+/* Machine body */
+.machine-body {
+  width:320px; height:360px;
+  background:linear-gradient(160deg,#1c2d48 0%,#111e33 40%,#0c1520 100%);
+  border-radius:16px;
+  border:1px solid var(--border2);
+  box-shadow:0 0 80px #000a, inset 0 1px 0 #ffffff12, inset 0 -1px 0 #00000050;
+  position:relative; overflow:hidden;
+}
+/* Metallic sheen */
+.machine-body::before {
+  content:''; position:absolute; inset:0; border-radius:16px;
+  background:linear-gradient(135deg,#ffffff08 0%,transparent 50%,#00000020 100%);
+  pointer-events:none;
+}
+/* Branding stripe */
+.machine-stripe {
+  position:absolute; top:0; left:0; right:0; height:4px;
+  background:linear-gradient(to right,var(--accent2),var(--accent));
+  border-radius:16px 16px 0 0;
+}
+/* Brand label */
+.machine-brand {
+  position:absolute; top:12px; left:18px;
+  font-family:'Exo 2',sans-serif; font-size:11px; font-weight:700; letter-spacing:3px;
+  color:var(--accent); opacity:.8; text-transform:uppercase;
+}
+.machine-model {
+  position:absolute; top:28px; left:18px;
+  font-size:9px; letter-spacing:2px; color:var(--muted2); text-transform:uppercase;
+}
+
+/* Porthole */
+.porthole {
+  position:absolute; top:26px; left:50%; transform:translateX(-50%);
+  width:180px; height:180px; border-radius:50%;
+  background:#030608;
+  border:8px solid #182540;
+  box-shadow:
+    inset 0 0 40px #000,
+    0 0 0 2px #0f1c30,
+    0 0 30px #0006,
+    inset 0 3px 0 #2a4060a0;
+}
+.porthole-ring {
+  position:absolute; inset:4px; border-radius:50%;
+  border:1px solid #1e3050; overflow:hidden;
+}
+/* Glass highlight */
+.porthole-glass {
+  position:absolute; inset:0; border-radius:50%; pointer-events:none; z-index:10;
+  background:radial-gradient(circle at 35% 28%, #ffffff0e 0%, #ffffff03 40%, transparent 70%);
+}
+/* Porthole bolts */
+.porthole::after {
+  content:'';
+  position:absolute; inset:-14px; border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 5%,  #2a4060 0%,#2a4060 3%,transparent 3%),
+    radial-gradient(circle at 95% 50%, #2a4060 0%,#2a4060 3%,transparent 3%),
+    radial-gradient(circle at 50% 95%, #2a4060 0%,#2a4060 3%,transparent 3%),
+    radial-gradient(circle at 5% 50%,  #2a4060 0%,#2a4060 3%,transparent 3%);
+}
+
+/* Drum */
+.drum { position:absolute; inset:0; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; transition:background 1s; }
+.drum-svg-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.drum-svg { transition:none; }
+/* Water */
+.water {
+  position:absolute; bottom:0; left:0; right:0; border-radius:0 0 50% 50%;
+  transition:height 3s ease, background .8s, opacity .8s; pointer-events:none; z-index:1;
+}
+/* Water ripple */
+.water-ripple {
+  position:absolute; top:-4px; left:-5%; right:-5%; height:8px;
+  background:inherit; border-radius:50%; opacity:.5;
+  animation:ripple 2s ease-in-out infinite;
+}
+@keyframes ripple { 0%,100%{transform:scaleX(1) translateY(0)} 50%{transform:scaleX(1.04) translateY(-2px)} }
+/* Foam */
+.foam {
+  position:absolute; top:-2px; left:0; right:0; height:12px;
+  background:repeating-linear-gradient(90deg,#ffffffaa 0,#ffffffaa 6px,transparent 6px,transparent 12px);
+  border-radius:50%; opacity:0; transition:opacity .5s; pointer-events:none; z-index:2;
+}
+
+/* Pipes */
+.pipes { position:absolute; inset:0; pointer-events:none; }
+.pipe { position:absolute; }
+.pipe-inlet { top:60px; right:-22px; width:22px; height:70px; background:linear-gradient(to right,#1a2030,#202a3a); border-radius:0 6px 6px 0; border:1px solid #223050; border-left:none; }
+.pipe-outlet { top:60px; left:-22px; width:22px; height:70px; background:linear-gradient(to left,#1a2030,#202a3a); border-radius:6px 0 0 6px; border:1px solid #223050; border-right:none; }
+.pipe-drain { bottom:60px; right:-22px; width:22px; height:50px; background:linear-gradient(to right,#151510,#1e1e14); border-radius:0 6px 6px 0; border:1px solid #333020; border-left:none; }
+/* Valve indicator dots */
+.valve-dot { position:absolute; width:9px; height:9px; border-radius:50%; border:1px solid #333; transition:background .3s, box-shadow .3s; }
+.vd-inlet { top:88px; right:-29px; }
+.vd-drain { bottom:78px; right:-29px; }
+.valve-on { background:var(--green) !important; box-shadow:0 0 10px var(--green) !important; border-color:var(--green) !important; }
+.valve-drain-on { background:var(--amber) !important; box-shadow:0 0 10px var(--amber) !important; border-color:var(--amber) !important; }
+
+/* Bottom control strip */
+.machine-bottom { position:absolute; bottom:0; left:0; right:0; height:60px; background:#0c1520; border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:8px; }
+.mlight { width:9px; height:9px; border-radius:50%; background:#1a2030; border:1px solid #223; transition:background .3s, box-shadow .3s; flex-shrink:0; }
+.mlight-label { font-size:8px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+.mlight-group { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.machine-digits {
+  margin-left:auto; font-family:'Share Tech Mono',monospace; font-size:16px;
+  color:var(--accent); letter-spacing:3px;
+  background:#040608; border:1px solid var(--border); padding:4px 10px; border-radius:4px;
+  text-shadow:0 0 10px var(--accent);
+}
+
+/* Vibration animations */
+@keyframes vib-low  { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-1px,0)} 75%{transform:translate(1px,0)} }
+@keyframes vib-med  { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-2px,-1px)} 75%{transform:translate(2px,1px)} }
+@keyframes vib-high { 0%,100%{transform:translate(0,0)} 12%{transform:translate(-4px,-2px)} 37%{transform:translate(3px,2px)} 62%{transform:translate(-3px,1px)} 87%{transform:translate(4px,-2px)} }
+
+/* Drain particles */
+.drain-anim { position:absolute; bottom:68px; right:-36px; width:14px; height:50px; overflow:visible; pointer-events:none; opacity:0; transition:opacity .3s; }
+.dp { position:absolute; width:4px; height:4px; border-radius:50%; background:var(--amber); animation:dpfall 0.9s ease-in infinite; }
+@keyframes dpfall { 0%{opacity:.9;top:0;left:0} 100%{opacity:0;top:44px;left:4px} }
+
+/* Viewport overlays */
+.vp-state-badge {
+  position:absolute; top:16px; left:16px;
+  font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:6px 16px; border-radius:20px; border:1px solid;
+  backdrop-filter:blur(6px); background:#00000050;
+  transition:all .5s;
+}
+.vp-timer {
+  position:absolute; top:16px; right:16px;
+  font-family:'Share Tech Mono',monospace; font-size:13px;
+  color:var(--muted2); background:#00000060; padding:5px 12px; border-radius:6px;
+  border:1px solid var(--border); transition:color .3s;
+}
+.vp-rpm {
+  position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  text-align:center; pointer-events:none;
+}
+.vp-rpm-num { font-family:'Share Tech Mono',monospace; font-size:32px; color:var(--accent); line-height:1; transition:color .5s; }
+.vp-rpm-unit { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+
+/* ===== SIDEBAR ===== */
+.sidebar { background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; }
+.sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:var(--panel); } .sidebar::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+/* Section header */
+.sh { font-size:9px; letter-spacing:2.5px; color:var(--muted); text-transform:uppercase; padding:10px 16px 0; border-top:1px solid var(--border); }
+.sh:first-child { border-top:none; }
+
+/* FSM Diagram */
+.fsm-wrap { padding:12px 16px; }
+.fsm-graph { position:relative; height:220px; background:#070c14; border-radius:8px; border:1px solid var(--border); overflow:hidden; }
+.fsm-node {
+  position:absolute; width:68px; height:28px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; letter-spacing:.8px; border:1px solid;
+  transition:all .35s; cursor:default; white-space:nowrap;
+  background:#0a1020;
+}
+.fsm-node.active { transform:scale(1.18) !important; filter:brightness(1.5) !important; }
+.fn-IDLE  { color:#88aaff; border-color:#2a4488; left:8px;   top:10px; }
+.fn-SOAK  { color:#44aaff; border-color:#1a5088; left:8px;   top:80px; }
+.fn-WASH  { color:#44ff88; border-color:#1a8855; left:8px;  top:150px; }
+.fn-RINSE { color:#44ccff; border-color:#1a6688; left:150px; top:150px; }
+.fn-SPIN  { color:#cc44ff; border-color:#662288; left:280px; top:80px; }
+.fn-FAULT { color:#ff4455; border-color:#882233; left:280px; top:170px; }
+
+/* Controls */
+.ctrl-wrap { padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+.btn-row { display:flex; gap:7px; }
+.btn {
+  flex:1; padding:8px 4px; border-radius:6px; border:1px solid;
+  background:transparent; color:inherit; font-family:'Rajdhani',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:1px; cursor:pointer;
+  transition:all .18s; text-transform:uppercase;
+}
+.btn:hover { filter:brightness(1.4); transform:translateY(-1px); }
+.btn:active { transform:scale(.96) translateY(0); }
+.btn-start { color:var(--green); border-color:var(--green); }
+.btn-start:hover { background:#00ff8818; }
+.btn-pause { color:var(--amber); border-color:var(--amber); }
+.btn-pause:hover { background:#ffb30018; }
+.btn-stop { color:var(--red); border-color:var(--red); }
+.btn-stop:hover { background:#ff335518; }
+.btn-fault { color:var(--orange); border-color:var(--orange); }
+.btn-fault:hover { background:#ff6a0018; }
+.btn-door { color:#88aaff; border-color:#2a4488; }
+.btn-door:hover { background:#88aaff18; }
+.btn-reset { color:var(--muted2); border-color:var(--border2); }
+.btn-reset:hover { background:#ffffff10; }
+
+/* Intensity */
+.int-row { display:flex; gap:6px; }
+.int-btn {
+  flex:1; padding:6px 2px; border-radius:5px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-family:'Rajdhani',sans-serif;
+  font-size:11px; font-weight:700; cursor:pointer; transition:all .18s; letter-spacing:.5px;
+}
+.int-btn:hover { color:var(--text); border-color:var(--border2); }
+.int-btn.sel { color:var(--accent); border-color:var(--accent); background:#00d4ff12; }
+
+/* Sensor display */
+.sensor-row { display:flex; gap:6px; padding:10px 16px; }
+.sensor {
+  flex:1; padding:7px 4px; border-radius:6px; border:1px solid var(--border);
+  background:var(--card); text-align:center; transition:border-color .3s;
+}
+.sensor.ok  { border-color:#1a6644; }
+.sensor.warn { border-color:#883333; }
+.sensor-name { font-size:8px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:2px; }
+.sensor-val { font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:700; display:block; transition:color .3s; }
+.sensor.ok  .sensor-val { color:var(--green); }
+.sensor.warn .sensor-val { color:var(--red); }
+.sensor.neutral .sensor-val { color:var(--muted2); }
+
+/* Timer inputs */
+.timers-wrap { padding:8px 16px 12px; display:flex; flex-direction:column; gap:6px; }
+.timer-row { display:flex; align-items:center; gap:8px; }
+.timer-lbl { font-size:10px; letter-spacing:1px; color:var(--muted2); text-transform:uppercase; flex:1; }
+.timer-state-dot { width:7px; height:7px; border-radius:50%; border:1px solid; flex-shrink:0; }
+.timer-inp {
+  width:54px; background:var(--card); border:1px solid var(--border);
+  color:var(--text); border-radius:4px; padding:3px 6px;
+  font-family:'Share Tech Mono',monospace; font-size:12px; text-align:center;
+  transition:border-color .2s;
+}
+.timer-inp:focus { outline:none; border-color:var(--accent); }
+.timer-unit { font-size:9px; color:var(--muted); letter-spacing:1px; min-width:18px; }
+/* Progress per state */
+.timer-prog { flex:2; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.timer-prog-fill { height:100%; border-radius:2px; width:0%; transition:width .5s linear; }
+
+/* I/O Status */
+.io-wrap { padding:8px 16px 12px; display:flex; flex-direction:column; gap:5px; }
+.io-row { display:flex; justify-content:space-between; align-items:center; }
+.io-lbl { font-size:10px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; }
+.io-val { font-family:'Share Tech Mono',monospace; font-size:11px; }
+.tag { display:inline-block; padding:2px 8px; border-radius:8px; font-size:9px; font-weight:700; letter-spacing:1px; border:1px solid; }
+.tag-on  { color:var(--green); border-color:var(--green); background:#00ff8810; }
+.tag-off { color:var(--muted); border-color:var(--border); }
+.tag-pump { color:var(--amber); border-color:var(--amber); background:#ffb30010; }
+.tag-fault { color:var(--red); border-color:var(--red); background:#ff335510; }
+.prog-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:6px; }
+.prog-fill { height:100%; border-radius:2px; width:0%; transition:width .5s linear, background .5s; }
+
+/* Log */
+.log-wrap { padding:8px 16px 12px; flex:1; display:flex; flex-direction:column; min-height:0; }
+.log-box {
+  flex:1; min-height:90px; max-height:130px; background:var(--card);
+  border:1px solid var(--border); border-radius:6px; padding:7px 9px;
+  overflow-y:auto; font-family:'Share Tech Mono',monospace; font-size:10px;
+}
+.log-box::-webkit-scrollbar { width:3px; } .log-box::-webkit-scrollbar-thumb { background:var(--border2); }
+.ll { margin-bottom:3px; line-height:1.4; }
+.ll.info { color:#44aaff; } .ll.ok { color:var(--green); } .ll.warn { color:var(--amber); } .ll.err { color:var(--red); } .ll.sys { color:var(--muted2); }
+
+/* ===== REPORT MODAL ===== */
+.modal-bg { position:fixed; inset:0; background:#000d; display:none; align-items:center; justify-content:center; z-index:200; backdrop-filter:blur(4px); }
+.modal-bg.open { display:flex; }
+.modal {
+  background:var(--card2); border:1px solid var(--border2);
+  border-radius:14px; padding:24px; width:400px; max-width:95vw;
+  max-height:85vh; overflow-y:auto; box-shadow:0 0 60px #000c;
+}
+.modal h3 { font-family:'Exo 2',sans-serif; font-size:15px; letter-spacing:2px; color:var(--accent); margin-bottom:4px; text-transform:uppercase; }
+.modal-sub { font-size:10px; color:var(--muted); letter-spacing:1px; margin-bottom:16px; }
+.report-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.report-row:last-child { border:none; }
+.report-section { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; padding:10px 0 4px; }
+.eff-score { text-align:center; padding:12px 0; }
+.eff-num { font-family:'Share Tech Mono',monospace; font-size:36px; color:var(--green); line-height:1; }
+.eff-grade { font-size:11px; color:var(--muted2); letter-spacing:2px; margin-top:4px; }
+.close-btn {
+  margin-top:16px; width:100%; padding:9px;
+  border-radius:6px; border:1px solid var(--accent);
+  background:transparent; color:var(--accent);
+  font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700;
+  cursor:pointer; letter-spacing:1px; transition:background .2s;
+}
+.close-btn:hover { background:#00d4ff15; }
+
+/* ===== FAULT FLASH ===== */
+@keyframes fault-flash { 0%,100%{opacity:0} 50%{opacity:.3} }
+.fault-overlay { position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:50; animation:none; }
+.fault-overlay.active { animation:fault-flash .4s ease-in-out 3; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-title">⬡ <span>FSM</span> Washing Machine Lab</div>
+    <div class="topbar-badge">MECHATRONICS SIMULATION</div>
+    <div class="topbar-badge">MOORE / MEALY FSM</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-state" id="topbarState" style="color:#88aaff;border-color:#2a4488">● IDLE</div>
+  </div>
+
+  <!-- VIEWPORT -->
+  <div class="viewport" id="viewport">
+    <div class="vp-glow" id="vpGlow"></div>
+    <div class="vp-floor"></div>
+
+    <div class="machine-scene">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="machine-wrap" id="machineWrap">
+          <!-- MACHINE BODY -->
+          <div class="machine-body" id="machineBody">
+            <div class="machine-stripe"></div>
+            <div class="machine-brand">MECHALAB</div>
+            <div class="machine-model">FSM-9000 · INDUSTRIAL SERIES</div>
+
+            <!-- PORTHOLE -->
+            <div class="porthole" style="position:absolute;top:32px;left:50%;transform:translateX(-50%)">
+              <div class="porthole-ring">
+                <!-- DRUM -->
+                <div class="drum" id="drum">
+                  <div class="water" id="water">
+                    <div class="water-ripple"></div>
+                  </div>
+                  <div class="foam" id="foam"></div>
+                  <div class="drum-svg-wrap">
+                    <svg class="drum-svg" id="drumSVG" width="148" height="148" viewBox="0 0 148 148">
+                      <circle cx="74" cy="74" r="70" fill="none" stroke="#1e3060" stroke-width="1" stroke-dasharray="5 7"/>
+                      <circle cx="74" cy="74" r="50" fill="none" stroke="#192848" stroke-width="1" stroke-dasharray="4 6"/>
+                      <circle cx="74" cy="74" r="28" fill="none" stroke="#1a2a50" stroke-width="1.5"/>
+                      <line x1="74" y1="4"  x2="74" y2="144" stroke="#182040" stroke-width=".5"/>
+                      <line x1="4"  y1="74" x2="144" y2="74" stroke="#182040" stroke-width=".5"/>
+                      <line x1="22" y1="22" x2="126" y2="126" stroke="#182040" stroke-width=".5"/>
+                      <line x1="126" y1="22" x2="22" y2="126" stroke="#182040" stroke-width=".5"/>
+                      <!-- Drum holes -->
+                      <circle cx="30" cy="74" r="5" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="118" cy="74" r="5" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="74" cy="30" r="5" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="74" cy="118" r="5" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="43" cy="43" r="4" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="105" cy="43" r="4" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="43" cy="105" r="4" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <circle cx="105" cy="105" r="4" fill="#0d1520" stroke="#1e3060" stroke-width="1"/>
+                      <!-- Center hub -->
+                      <circle cx="74" cy="74" r="9" fill="#0a1018" stroke="#223355" stroke-width="1.5"/>
+                      <circle cx="74" cy="74" r="3" fill="#1a2840"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="porthole-glass"></div>
+            </div>
+
+            <!-- PIPES & VALVES -->
+            <div class="pipes">
+              <div class="pipe pipe-inlet"></div>
+              <div class="pipe pipe-outlet"></div>
+              <div class="pipe pipe-drain"></div>
+              <div class="valve-dot vd-inlet" id="vdInlet"></div>
+              <div class="valve-dot vd-drain" id="vdDrain"></div>
+            </div>
+
+            <!-- BOTTOM STRIP -->
+            <div class="machine-bottom">
+              <div class="mlight-group"><div class="mlight" id="ml0"></div><div class="mlight-label">PWR</div></div>
+              <div class="mlight-group"><div class="mlight" id="ml1"></div><div class="mlight-label">INLET</div></div>
+              <div class="mlight-group"><div class="mlight" id="ml2"></div><div class="mlight-label">DRAIN</div></div>
+              <div class="mlight-group"><div class="mlight" id="ml3"></div><div class="mlight-label">MOTOR</div></div>
+              <div class="mlight-group"><div class="mlight" id="ml4"></div><div class="mlight-label">FAULT</div></div>
+              <div class="machine-digits" id="machDigits">IDLE</div>
+            </div>
+          </div>
+          <!-- Drain particles -->
+          <div class="drain-anim" id="drainAnim">
+            <div class="dp" style="animation-delay:0s"></div>
+            <div class="dp" style="animation-delay:.25s;left:5px"></div>
+            <div class="dp" style="animation-delay:.5s"></div>
+            <div class="dp" style="animation-delay:.75s;left:5px"></div>
+          </div>
+        </div>
+        <div class="counter"></div>
+      </div>
+    </div>
+
+    <!-- OVERLAYS -->
+    <div class="vp-state-badge" id="vpBadge" style="color:#88aaff;border-color:#2a4488">● IDLE</div>
+    <div class="vp-timer" id="vpTimer">--:--</div>
+    <div class="vp-rpm">
+      <div class="vp-rpm-num" id="rpmNum">0</div>
+      <div class="vp-rpm-unit">RPM</div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- FSM Map -->
+    <div class="sh">⬡ FSM State Transition Map</div>
+    <div class="fsm-wrap">
+      <div class="fsm-graph">
+        <svg width="100%" height="100%" viewBox="0 0 360 220" style="position:absolute;inset:0">
+          <defs>
+            <marker id="mArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#2a4070" stroke-width="1.5" stroke-linecap="round"/>
+            </marker>
+            <marker id="mErr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#882233" stroke-width="1.5" stroke-linecap="round"/>
+            </marker>
+          </defs>
+          <!-- Normal flow -->
+          <path d="M42 38 L42 80" fill="none" stroke="#2a4070" stroke-width="1" marker-end="url(#mArr)"/>
+          <path d="M76 96 L108 156" fill="none" stroke="#2a4070" stroke-width="1" marker-end="url(#mArr)"/>
+          <path d="M42 164 L148 164" fill="none" stroke="#2a4070" stroke-width="1" marker-end="url(#mArr)"/>
+          <path d="M216 156 L296 110" fill="none" stroke="#2a4070" stroke-width="1" marker-end="url(#mArr)"/>
+          <!-- SPIN → IDLE -->
+          <path d="M316 80 L316 30 L76 24" fill="none" stroke="#2a4070" stroke-width="1" marker-end="url(#mArr)"/>
+          <!-- Fault paths -->
+          <path d="M316 108 L316 172" fill="none" stroke="#882233" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#mErr)"/>
+          <path d="M294 186 L76 38" fill="none" stroke="#882233" stroke-width=".8" stroke-dasharray="2 4" marker-end="url(#mErr)" opacity=".6"/>
+          <!-- Labels -->
+          <text x="50" y="62" fill="#2a4070" font-size="8" font-family="'Share Tech Mono',monospace">START</text>
+          <text x="64" y="130" fill="#2a4070" font-size="8" font-family="'Share Tech Mono',monospace">TIMER</text>
+          <text x="90" y="158" fill="#2a4070" font-size="8" font-family="'Share Tech Mono',monospace">TIMER</text>
+          <text x="218" y="142" fill="#2a4070" font-size="8" font-family="'Share Tech Mono',monospace">TIMER</text>
+          <text x="320" y="56" fill="#2a4070" font-size="8" font-family="'Share Tech Mono',monospace">DONE</text>
+          <text x="322" y="145" fill="#882233" font-size="8" font-family="'Share Tech Mono',monospace">FAULT</text>
+        </svg>
+        <!-- Nodes -->
+        <div class="fsm-node fn-IDLE"  id="fn-IDLE">IDLE</div>
+        <div class="fsm-node fn-SOAK"  id="fn-SOAK">SOAK</div>
+        <div class="fsm-node fn-WASH"  id="fn-WASH">WASH</div>
+        <div class="fsm-node fn-RINSE" id="fn-RINSE">RINSE</div>
+        <div class="fsm-node fn-SPIN"  id="fn-SPIN">SPIN</div>
+        <div class="fsm-node fn-FAULT" id="fn-FAULT">FAULT</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="sh">Control Panel</div>
+    <div class="ctrl-wrap">
+      <div class="btn-row">
+        <button class="btn btn-start" id="btnStart" onclick="fsm.start()">▶ Start</button>
+        <button class="btn btn-pause" id="btnPause" onclick="fsm.pause()">⏸ Pause</button>
+        <button class="btn btn-stop"  onclick="fsm.estop()">⏹ E-Stop</button>
+      </div>
+      <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:2px">Wash Intensity</div>
+      <div class="int-row">
+        <button class="int-btn" id="ib-delicate" onclick="setIntensity('delicate',this)">Delicate</button>
+        <button class="int-btn sel" id="ib-normal" onclick="setIntensity('normal',this)">Normal</button>
+        <button class="int-btn" id="ib-heavy" onclick="setIntensity('heavy',this)">Heavy</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-door"  id="btnDoor"  onclick="fsm.toggleDoor()">🔒 Door: Locked</button>
+        <button class="btn btn-fault" onclick="fsm.injectFault('Pump Failure')">⚠ Pump Fail</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-reset" onclick="fsm.reset()">↺ Reset All</button>
+        <button class="btn" style="color:var(--accent);border-color:var(--accent)" onclick="showHelp()">? Help</button>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div class="sh">Sensor Inputs (I/O Mapping)</div>
+    <div class="sensor-row">
+      <div class="sensor ok" id="sDoor">
+        <span class="sensor-name">Door Lock</span>
+        <span class="sensor-val" id="svDoor">LOCKED</span>
+      </div>
+      <div class="sensor neutral" id="sWater">
+        <span class="sensor-name">Water Level</span>
+        <span class="sensor-val" id="svWater">DRY</span>
+      </div>
+      <div class="sensor ok" id="sPump">
+        <span class="sensor-name">Pump Status</span>
+        <span class="sensor-val" id="svPump">OK</span>
+      </div>
+    </div>
+
+    <!-- TIMERS -->
+    <div class="sh">Variable Timing Logic (Digital Terminal)</div>
+    <div class="timers-wrap">
+      <div class="timer-row">
+        <div class="timer-state-dot" style="color:#44aaff;border-color:#44aaff;background:#44aaff20"></div>
+        <div class="timer-lbl">SOAK</div>
+        <input class="timer-inp" type="number" id="t-SOAK" value="5" min="1" max="120">
+        <div class="timer-unit">sec</div>
+        <div class="timer-prog"><div class="timer-prog-fill" id="tp-SOAK" style="background:#44aaff"></div></div>
+      </div>
+      <div class="timer-row">
+        <div class="timer-state-dot" style="color:#44ff88;border-color:#44ff88;background:#44ff8820"></div>
+        <div class="timer-lbl">WASH</div>
+        <input class="timer-inp" type="number" id="t-WASH" value="10" min="1" max="120">
+        <div class="timer-unit">sec</div>
+        <div class="timer-prog"><div class="timer-prog-fill" id="tp-WASH" style="background:#44ff88"></div></div>
+      </div>
+      <div class="timer-row">
+        <div class="timer-state-dot" style="color:#44ccff;border-color:#44ccff;background:#44ccff20"></div>
+        <div class="timer-lbl">RINSE</div>
+        <input class="timer-inp" type="number" id="t-RINSE" value="8" min="1" max="120">
+        <div class="timer-unit">sec</div>
+        <div class="timer-prog"><div class="timer-prog-fill" id="tp-RINSE" style="background:#44ccff"></div></div>
+      </div>
+      <div class="timer-row">
+        <div class="timer-state-dot" style="color:#cc44ff;border-color:#cc44ff;background:#cc44ff20"></div>
+        <div class="timer-lbl">SPIN</div>
+        <input class="timer-inp" type="number" id="t-SPIN" value="12" min="1" max="120">
+        <div class="timer-unit">sec</div>
+        <div class="timer-prog"><div class="timer-prog-fill" id="tp-SPIN" style="background:#cc44ff"></div></div>
+      </div>
+    </div>
+
+    <!-- I/O Status -->
+    <div class="sh">Output State / I/O Map</div>
+    <div class="io-wrap">
+      <div class="io-row"><div class="io-lbl">Active State</div><div class="io-val" id="ioState"><span class="tag tag-off">IDLE</span></div></div>
+      <div class="io-row"><div class="io-lbl">Drum RPM</div><div class="io-val"><span id="ioRPM" style="font-family:'Share Tech Mono',monospace;color:var(--accent)">0</span> RPM</div></div>
+      <div class="io-row"><div class="io-lbl">Water Level</div><div class="io-val"><span id="ioWater" style="font-family:'Share Tech Mono',monospace;color:#44aaff">0</span>%</div></div>
+      <div class="io-row"><div class="io-lbl">Inlet Valve</div><div class="io-val" id="ioValve"><span class="tag tag-off">CLOSED</span></div></div>
+      <div class="io-row"><div class="io-lbl">Drain Pump</div><div class="io-val" id="ioDrain"><span class="tag tag-off">OFF</span></div></div>
+      <div class="io-row"><div class="io-lbl">Motor Dir.</div><div class="io-val" id="ioDir"><span class="tag tag-off">STOPPED</span></div></div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+
+    <!-- Log -->
+    <div class="sh">System Event Log</div>
+    <div class="log-wrap">
+      <div class="log-box" id="logBox"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal">
+    <h3>📊 Logic Report</h3>
+    <div class="modal-sub">CYCLE COMPLETE — FSM EXECUTION TRACE</div>
+    <div id="reportContent"></div>
+    <button class="close-btn" onclick="document.getElementById('reportModal').classList.remove('open')">✓ Close Report</button>
+  </div>
+</div>
+
+<!-- FAULT FLASH -->
+<div class="fault-overlay" id="faultFlash"></div>
+
+<script>
+/* ============================================================
+   FSM WASHING MACHINE CONTROLLER
+   Moore/Mealy machine implementation
+   States: IDLE, SOAK, WASH, RINSE, SPIN, FAULT
+   ============================================================ */
+
+const S = { IDLE:'IDLE', SOAK:'SOAK', WASH:'WASH', RINSE:'RINSE', SPIN:'SPIN', FAULT:'FAULT' };
+
+const STATE_COLOR = {
+  IDLE:'#88aaff', SOAK:'#44aaff', WASH:'#44ff88',
+  RINSE:'#44ccff', SPIN:'#cc44ff', FAULT:'#ff4455'
+};
+const STATE_BORDER = {
+  IDLE:'#2a4488', SOAK:'#1a5088', WASH:'#1a8855',
+  RINSE:'#1a6688', SPIN:'#662288', FAULT:'#882233'
+};
+const WASH_RPM  = { delicate:25,  normal:55,   heavy:85  };
+const SPIN_RPM  = { delicate:600, normal:1000, heavy:1400 };
+const WATER_PCT = { IDLE:0, SOAK:70, WASH:65, RINSE:38, SPIN:8, FAULT:30 };
+const MOTOR_DIR = { IDLE:'STOPPED', SOAK:'STOPPED', WASH:'AGITATE', RINSE:'FWD+REV', SPIN:'FWD', FAULT:'STOPPED' };
+
+let intensity = 'normal';
+let doorLocked = true;
+let pumpOk = true;
+let cycleHistory = [];
+let cycleStart = 0;
+let drumAngle = 0;
+let targetRPM = 0;
+let currentRPM = 0;
+let lastTS = 0;
+let rafId = null;
+
+/* ---- FSM Object ---- */
+const fsm = {
+  state: S.IDLE,
+  paused: false,
+  stateTimer: null,
+  stateStart: Date.now(),
+  duration: 0,
+
+  getDurations() {
+    return {
+      SOAK:  parseInt(document.getElementById('t-SOAK').value)  || 5,
+      WASH:  parseInt(document.getElementById('t-WASH').value)  || 10,
+      RINSE: parseInt(document.getElementById('t-RINSE').value) || 8,
+      SPIN:  parseInt(document.getElementById('t-SPIN').value)  || 12,
+    };
+  },
+
+  /* TRANSITION — core FSM logic */
+  transition(newState, note) {
+    const prev = this.state;
+    clearTimeout(this.stateTimer);
+
+    // Record previous state in history
+    if (prev !== S.IDLE || cycleHistory.length > 0) {
+      const spent = ((Date.now() - this.stateStart) / 1000).toFixed(1);
+      cycleHistory.push({ state: prev, dur: spent + 's', note: note || null });
+    }
+
+    this.state = newState;
+    this.stateStart = Date.now();
+    this.paused = false;
+
+    const dur = this.getDurations()[newState] || 0;
+    this.duration = dur;
+
+    applyState(newState);
+
+    // Schedule auto-transition if timed state
+    if (dur > 0) {
+      const next = { SOAK: S.WASH, WASH: S.RINSE, RINSE: S.SPIN, SPIN: null }[newState];
+      if (next !== undefined) {
+        this.stateTimer = setTimeout(() => {
+          if (!this.paused) {
+            log(`Timer expired — ${newState} → ${next || 'COMPLETE'}`, 'ok');
+            if (next) this.transition(next);
+            else this.complete();
+          }
+        }, dur * 1000);
+      }
+    }
+  },
+
+  start() {
+    if (this.state === S.FAULT) { log('Cannot start — system in FAULT. Reset first.', 'err'); return; }
+    if (this.state !== S.IDLE && !this.paused) { log('Already running', 'warn'); return; }
+    if (!doorLocked) { log('BLOCKED: Door sensor = OPEN. Lock door to proceed.', 'err'); setSensor('sDoor','warn'); return; }
+    if (!pumpOk)     { log('BLOCKED: Pump sensor = FAULT. Cannot start.', 'err'); return; }
+
+    if (this.paused) {
+      this.paused = false;
+      log('Cycle RESUMED — ' + this.state, 'ok');
+      document.getElementById('btnPause').textContent = '⏸ Pause';
+      // reschedule remaining time
+      const rem = Math.max(0, this.duration - (Date.now() - this.stateStart) / 1000);
+      const next = { SOAK:S.WASH, WASH:S.RINSE, RINSE:S.SPIN, SPIN:null }[this.state];
+      if (next !== undefined && rem > 0) {
+        this.stateTimer = setTimeout(() => {
+          if (!this.paused) {
+            if (next) this.transition(next);
+            else this.complete();
+          }
+        }, rem * 1000);
+      }
+      return;
+    }
+
+    cycleHistory = [];
+    cycleStart = Date.now();
+    log('Cycle initiated — IDLE → SOAK', 'ok');
+    this.transition(S.SOAK);
+  },
+
+  pause() {
+    if (this.state === S.IDLE || this.state === S.FAULT) return;
+    if (!this.paused) {
+      this.paused = true;
+      clearTimeout(this.stateTimer);
+      log('Cycle PAUSED at ' + this.state, 'warn');
+      document.getElementById('btnPause').textContent = '▶ Resume';
+    } else {
+      this.start(); // resume
+    }
+  },
+
+  estop() {
+    clearTimeout(this.stateTimer);
+    this.paused = false;
+    log('⚠ EMERGENCY STOP — returning to IDLE', 'err');
+    if (this.state !== S.IDLE) cycleHistory.push({ state: this.state, dur: 'aborted', note: 'E-Stop' });
+    this.state = S.IDLE;
+    this.duration = 0;
+    applyState(S.IDLE);
+    document.getElementById('btnPause').textContent = '⏸ Pause';
+  },
+
+  toggleDoor() {
+    doorLocked = !doorLocked;
+    document.getElementById('btnDoor').textContent = doorLocked ? '🔒 Door: Locked' : '🔓 Door: Open';
+    document.getElementById('svDoor').textContent = doorLocked ? 'LOCKED' : 'OPEN';
+    setSensor('sDoor', doorLocked ? 'ok' : 'warn');
+    log('Door sensor: ' + (doorLocked ? 'LOCKED ✓' : 'OPEN ⚠'), doorLocked ? 'ok' : 'warn');
+    if (!doorLocked && this.state !== S.IDLE && this.state !== S.FAULT) {
+      log('SAFETY TRIGGER: Door opened mid-cycle!', 'err');
+      this.injectFault('Door Open During Cycle');
+    }
+  },
+
+  injectFault(reason) {
+    reason = reason || 'Pump Failure';
+    clearTimeout(this.stateTimer);
+    pumpOk = false;
+    document.getElementById('svPump').textContent = 'FAIL';
+    setSensor('sPump', 'warn');
+    log('FAULT INJECTED: ' + reason, 'err');
+    log('FSM → FAULT state', 'err');
+    cycleHistory.push({ state: this.state, dur: ((Date.now()-this.stateStart)/1000).toFixed(1)+'s', note: 'FAULT: ' + reason });
+    this.state = S.FAULT;
+    this.duration = 0;
+    applyState(S.FAULT);
+    // Flash
+    const fl = document.getElementById('faultFlash');
+    fl.classList.add('active');
+    setTimeout(() => fl.classList.remove('active'), 1500);
+    // Auto-recover after 5s
+    setTimeout(() => {
+      log('Auto-recovery: Resetting pump driver...', 'warn');
+      setTimeout(() => {
+        pumpOk = true;
+        document.getElementById('svPump').textContent = 'OK';
+        setSensor('sPump', 'ok');
+        log('Pump reset OK. System IDLE. Press START to retry.', 'ok');
+        this.state = S.IDLE;
+        this.duration = 0;
+        applyState(S.IDLE);
+      }, 3000);
+    }, 2000);
+  },
+
+  reset() {
+    clearTimeout(this.stateTimer);
+    this.state = S.IDLE; this.paused = false; this.duration = 0;
+    pumpOk = true; doorLocked = true;
+    document.getElementById('svPump').textContent = 'OK';
+    document.getElementById('svDoor').textContent = 'LOCKED';
+    document.getElementById('btnDoor').textContent = '🔒 Door: Locked';
+    document.getElementById('btnPause').textContent = '⏸ Pause';
+    setSensor('sDoor','ok'); setSensor('sPump','ok');
+    cycleHistory = [];
+    applyState(S.IDLE);
+    log('System RESET — all parameters cleared','sys');
+  },
+
+  complete() {
+    const total = ((Date.now() - cycleStart) / 1000).toFixed(1);
+    cycleHistory.push({ state: S.SPIN, dur: this.getDurations().SPIN + 's', note: null });
+    log('✓ CYCLE COMPLETE — Total: ' + total + 's', 'ok');
+    this.state = S.IDLE; this.duration = 0;
+    applyState(S.IDLE);
+    setTimeout(() => showReport(total), 600);
+  }
+};
+
+/* ---- Apply visual state ---- */
+function applyState(state) {
+  const col = STATE_COLOR[state];
+  const brd = STATE_BORDER[state];
+
+  // Topbar + badge
+  const tb = document.getElementById('topbarState');
+  tb.textContent = '● ' + state;
+  tb.style.color = col; tb.style.borderColor = brd;
+
+  const badge = document.getElementById('vpBadge');
+  badge.textContent = '● ' + state;
+  badge.style.color = col; badge.style.borderColor = brd;
+  badge.style.background = col + '18';
+
+  // FSM nodes
+  document.querySelectorAll('.fsm-node').forEach(n => {
+    n.classList.remove('active');
+    n.style.boxShadow = 'none';
+  });
+  const fn = document.getElementById('fn-' + state);
+  if (fn) fn.classList.add('active');
+
+  // Viewport ambient glow
+  const glowMap = {
+    IDLE:'',SOAK:'radial-gradient(ellipse at 50% 100%,#002244 0%,transparent 60%)',
+    WASH:'radial-gradient(ellipse at 50% 100%,#002214 0%,transparent 60%)',
+    RINSE:'radial-gradient(ellipse at 50% 100%,#001a30 0%,transparent 60%)',
+    SPIN:'radial-gradient(ellipse at 50% 100%,#1a0025 0%,transparent 60%)',
+    FAULT:'radial-gradient(ellipse at 50% 100%,#2a0008 0%,transparent 60%)',
+  };
+  document.getElementById('vpGlow').style.background = glowMap[state] || '';
+
+  // Machine body tint
+  const bodyTint = {
+    IDLE:'linear-gradient(160deg,#1c2d48,#111e33,#0c1520)',
+    SOAK:'linear-gradient(160deg,#1c2d48,#0d1e33,#091520)',
+    WASH:'linear-gradient(160deg,#1c3040,#0d1e28,#091518)',
+    RINSE:'linear-gradient(160deg,#1c2d44,#0d1c30,#091418)',
+    SPIN:'linear-gradient(160deg,#251a40,#18103a,#100820)',
+    FAULT:'linear-gradient(160deg,#3a1020,#220a12,#150508)',
+  };
+  document.getElementById('machineBody').style.background = bodyTint[state];
+
+  // Vibration
+  const wrap = document.getElementById('machineWrap');
+  wrap.style.animation = 'none';
+  void wrap.offsetWidth;
+  if (state === 'SPIN')      wrap.style.animation = 'vib-high .08s linear infinite';
+  else if (state === 'WASH') wrap.style.animation = 'vib-med .15s linear infinite';
+  else if (state === 'RINSE')wrap.style.animation = 'vib-low .2s linear infinite';
+
+  // RPM target
+  const rpmMap = { IDLE:0, SOAK:0, WASH:WASH_RPM[intensity], RINSE:50, SPIN:SPIN_RPM[intensity], FAULT:0 };
+  targetRPM = rpmMap[state] || 0;
+
+  // Water level
+  const wp = WATER_PCT[state] || 0;
+  const wEl = document.getElementById('water');
+  wEl.style.height = wp + '%';
+  if (wp > 0) {
+    const waterColor = state === 'WASH' ? '#1a4a88a0' : '#1a3a6880';
+    wEl.style.background = `radial-gradient(ellipse,${waterColor},#0a204050)`;
+  } else { wEl.style.background = 'transparent'; }
+  document.getElementById('svWater').textContent = wp > 50 ? 'HIGH' : wp > 15 ? 'LOW' : 'DRY';
+  setSensor('sWater', wp > 0 ? 'ok' : 'neutral');
+  document.getElementById('ioWater').textContent = wp;
+
+  // Foam (wash state)
+  document.getElementById('foam').style.opacity = state === 'WASH' ? '0.8' : '0';
+
+  // Valve lights
+  const inlet = ['SOAK','WASH'].includes(state);
+  const drain = ['RINSE','SPIN'].includes(state);
+  document.getElementById('vdInlet').className = 'valve-dot vd-inlet' + (inlet ? ' valve-on' : '');
+  document.getElementById('vdDrain').className = 'valve-dot vd-drain' + (drain ? ' valve-drain-on' : '');
+  document.getElementById('drainAnim').style.opacity = drain ? '1' : '0';
+
+  // Machine indicator lights
+  setLight(0, '#00ff88', true);
+  setLight(1, '#44aaff', inlet);
+  setLight(2, '#aaff44', drain);
+  setLight(3, '#cc44ff', ['WASH','RINSE','SPIN'].includes(state));
+  setLight(4, '#ff4455', state === 'FAULT');
+
+  // Digits
+  document.getElementById('machDigits').textContent = state;
+  document.getElementById('machDigits').style.color = col;
+  document.getElementById('machDigits').style.textShadow = `0 0 12px ${col}`;
+
+  // I/O panel
+  const stateTag = `<span class="tag" style="color:${col};border-color:${brd};background:${col}12">${state}</span>`;
+  document.getElementById('ioState').innerHTML = stateTag;
+
+  document.getElementById('ioValve').innerHTML = inlet ?
+    '<span class="tag tag-on">OPEN</span>' :
+    '<span class="tag tag-off">CLOSED</span>';
+  document.getElementById('ioDrain').innerHTML = drain ?
+    '<span class="tag tag-pump">PUMPING</span>' :
+    '<span class="tag tag-off">OFF</span>';
+  document.getElementById('ioDir').innerHTML =
+    `<span class="tag" style="color:${col};border-color:${brd}">${MOTOR_DIR[state]}</span>`;
+
+  // RPM display color
+  document.getElementById('rpmNum').style.color = state === 'SPIN' ? '#cc44ff' : state === 'WASH' ? '#44ff88' : 'var(--accent)';
+
+  // Reset prog bars when idle/fault
+  if (state === 'IDLE' || state === 'FAULT') {
+    document.getElementById('progFill').style.width = '0%';
+    ['SOAK','WASH','RINSE','SPIN'].forEach(s => {
+      document.getElementById('tp-'+s).style.width = '0%';
+    });
+    document.getElementById('vpTimer').textContent = '--:--';
+    document.getElementById('vpTimer').style.color = 'var(--muted2)';
+  }
+}
+
+function setLight(i, color, on) {
+  const el = document.getElementById('ml' + i);
+  el.style.background = on ? color : '#1a2030';
+  el.style.boxShadow = on ? `0 0 8px ${color}, 0 0 3px ${color}` : 'none';
+}
+
+function setSensor(id, cls) {
+  const el = document.getElementById(id);
+  el.className = 'sensor ' + cls;
+}
+
+function setIntensity(val, btn) {
+  intensity = val;
+  document.querySelectorAll('.int-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  log('Intensity → ' + val.toUpperCase() + ' (Spin: ' + SPIN_RPM[val] + ' RPM)', 'info');
+}
+
+function log(msg, type) {
+  type = type || 'info';
+  const box = document.getElementById('logBox');
+  const t = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d = document.createElement('div');
+  d.className = 'll ' + type;
+  d.textContent = '[' + t + '] ' + msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showReport(totalTime) {
+  const timers = fsm.getDurations();
+  let html = '';
+  html += `<div class="report-section">Cycle Summary</div>`;
+  html += `<div class="report-row"><span>Total Duration</span><span style="font-family:'Share Tech Mono',monospace;color:var(--accent)">${totalTime}s</span></div>`;
+  html += `<div class="report-row"><span>Wash Intensity</span><span>${intensity.toUpperCase()}</span></div>`;
+  html += `<div class="report-row"><span>Peak Spin RPM</span><span style="font-family:'Share Tech Mono',monospace;color:#cc44ff">${SPIN_RPM[intensity]} RPM</span></div>`;
+  html += `<div class="report-row"><span>States Traversed</span><span>${cycleHistory.length}</span></div>`;
+
+  html += `<div class="report-section">State Execution Path</div>`;
+  cycleHistory.forEach(h => {
+    const c = STATE_COLOR[h.state] || '#888';
+    const b = STATE_BORDER[h.state] || '#333';
+    html += `<div class="report-row">
+      <span><span class="tag" style="color:${c};border-color:${b};background:${c}12">${h.state}</span></span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted2)">${h.dur}${h.note?' — <span style=\'color:var(--red)\'>' + h.note + '</span>':''}</span>
+    </div>`;
+  });
+
+  html += `<div class="report-section">User Config</div>`;
+  ['SOAK','WASH','RINSE','SPIN'].forEach(s => {
+    html += `<div class="report-row"><span>${s}</span><span style="font-family:'Share Tech Mono',monospace">${timers[s]}s</span></div>`;
+  });
+
+  html += `<div class="report-section">Efficiency Score</div>`;
+  const configured = timers.SOAK + timers.WASH + timers.RINSE + timers.SPIN;
+  const efficiency = Math.min(99, Math.round(75 + (configured / parseFloat(totalTime)) * 20));
+  const grade = efficiency >= 95 ? 'EXCELLENT' : efficiency >= 85 ? 'OPTIMAL' : efficiency >= 75 ? 'GOOD' : 'REVIEW';
+  html += `<div class="eff-score"><div class="eff-num">${efficiency}%</div><div class="eff-grade">${grade}</div></div>`;
+
+  document.getElementById('reportContent').innerHTML = html;
+  document.getElementById('reportModal').classList.add('open');
+}
+
+function showHelp() {
+  alert(
+    'FSM WASHING MACHINE LAB — QUICK GUIDE\n\n' +
+    '▶ START — Lock the door first, then press Start.\n' +
+    '   The FSM cycles: IDLE → SOAK → WASH → RINSE → SPIN → IDLE\n\n' +
+    '⏸ PAUSE — Halts the current state timer. Press again to resume.\n\n' +
+    '⏹ E-STOP — Emergency stop, resets to IDLE immediately.\n\n' +
+    '🔒 DOOR SENSOR — Open the door mid-cycle to trigger a safety FAULT.\n\n' +
+    '⚠ PUMP FAIL — Injects a fault to test FSM fault-handling logic.\n\n' +
+    'INTENSITY — Changes drum agitation RPM and spin speed.\n\n' +
+    'TIMERS — Adjust each state duration in real time. Changes take effect on next cycle.\n\n' +
+    'LOGIC REPORT — Shown automatically after a complete cycle.'
+  );
+}
+
+/* ---- Animation loop ---- */
+function animLoop(ts) {
+  const dt = lastTS ? Math.min((ts - lastTS) / 1000, 0.05) : 0;
+  lastTS = ts;
+
+  // RPM smoothing
+  const lerpK = dt * (targetRPM > currentRPM ? 2 : 4);
+  currentRPM += (targetRPM - currentRPM) * Math.min(lerpK, 1);
+  const rpmDisplay = Math.round(currentRPM);
+  document.getElementById('rpmNum').textContent = rpmDisplay;
+  document.getElementById('ioRPM').textContent = rpmDisplay;
+
+  // Drum rotation
+  if (currentRPM > 0.5) {
+    drumAngle += currentRPM * dt * 6;
+    document.getElementById('drumSVG').style.transform = `rotate(${drumAngle}deg)`;
+  }
+
+  // State progress bars + timer
+  const state = fsm.state;
+  if (!fsm.paused && fsm.duration > 0 && !['IDLE','FAULT'].includes(state)) {
+    const elapsed = (Date.now() - fsm.stateStart) / 1000;
+    const pct = Math.min(elapsed / fsm.duration * 100, 100);
+
+    // Main progress bar
+    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progFill').style.background = STATE_COLOR[state];
+
+    // Per-state progress bar in timer panel
+    const tp = document.getElementById('tp-' + state);
+    if (tp) tp.style.width = pct + '%';
+
+    // Timer overlay
+    const rem = Math.max(0, fsm.duration - elapsed);
+    const m = Math.floor(rem / 60).toString().padStart(2, '0');
+    const s = Math.floor(rem % 60).toString().padStart(2, '0');
+    const vt = document.getElementById('vpTimer');
+    vt.textContent = state + '  ' + m + ':' + s;
+    vt.style.color = rem < 3 ? 'var(--amber)' : 'var(--muted2)';
+  }
+
+  rafId = requestAnimationFrame(animLoop);
+}
+
+/* ---- Boot ---- */
+applyState(S.IDLE);
+log('FSM Washing Machine Lab v1.0 — System Online', 'ok');
+log('Controller: Moore/Mealy hybrid FSM engine', 'sys');
+log('Sensors: Door=LOCKED, Water=DRY, Pump=OK', 'sys');
+log('Press ▶ START to begin a wash cycle', 'info');
+requestAnimationFrame(animLoop);
+</script>
+</body>
+</html>
