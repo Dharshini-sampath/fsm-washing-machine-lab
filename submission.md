@@ -195,7 +195,6 @@ After a complete cycle, a modal displays:
 
 5. **Configurable timing with live feedback**: Per-state timers with live progress bars let students experiment with cycle efficiency. The post-cycle Logic Report shows exactly which states were visited, how long was spent in each, and calculates an efficiency score — enabling the "reflection" step in the user journey.
 
----
 
 ## Demo Instructions
 
