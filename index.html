@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-/* ===== RESET & ROOT ===== */
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
   --bg:#070b14;
   --panel:#0c1220;
@@ -29,7 +29,7 @@
 }
 html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; }
 
-/* ===== LAYOUT ===== */
+
 .app { display:grid; grid-template-columns:1fr 400px; grid-template-rows:48px 1fr; height:100vh; }
 .topbar { grid-column:1/-1; background:var(--panel); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:16px; z-index:10; }
 .topbar-title { font-family:'Exo 2',sans-serif; font-size:15px; font-weight:700; letter-spacing:2px; color:var(--white); text-transform:uppercase; }
@@ -38,12 +38,12 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .topbar-spacer { flex:1; }
 .topbar-state { font-family:'Share Tech Mono',monospace; font-size:12px; padding:4px 12px; border-radius:12px; border:1px solid; transition:all .4s; }
 
-/* ===== VIEWPORT ===== */
+
 .viewport {
   position:relative; overflow:hidden;
   background: radial-gradient(ellipse at 50% 100%, #0d1a2e 0%, #060b14 70%);
 }
-/* Grid floor */
+  
 .vp-floor {
   position:absolute; bottom:0; left:0; right:0; height:160px;
   background:
@@ -51,18 +51,17 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
     repeating-linear-gradient(0deg,#1a3060 0,#1a3060 1px,transparent 1px,transparent 60px);
   opacity:.12; transform:perspective(300px) rotateX(40deg); transform-origin:bottom;
 }
-/* Ambient glow */
+
 .vp-glow { position:absolute; inset:0; pointer-events:none; transition:background 1s; }
 
-/* ===== MACHINE ===== */
+
 .machine-scene { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-bottom:40px; }
 .machine-wrap { position:relative; width:320px; }
 
-/* Countertop base */
+
 .counter { width:360px; height:18px; background:linear-gradient(to bottom,#1a2840,#101c30); border-radius:4px 4px 0 0; border:1px solid var(--border2); margin:0 auto 0; position:relative; left:-20px; }
 .counter::before { content:''; position:absolute; bottom:-6px; left:0; right:0; height:6px; background:#0c1520; }
 
-/* Machine body */
 .machine-body {
   width:320px; height:360px;
   background:linear-gradient(160deg,#1c2d48 0%,#111e33 40%,#0c1520 100%);
@@ -71,19 +70,19 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
   box-shadow:0 0 80px #000a, inset 0 1px 0 #ffffff12, inset 0 -1px 0 #00000050;
   position:relative; overflow:hidden;
 }
-/* Metallic sheen */
+
 .machine-body::before {
   content:''; position:absolute; inset:0; border-radius:16px;
   background:linear-gradient(135deg,#ffffff08 0%,transparent 50%,#00000020 100%);
   pointer-events:none;
 }
-/* Branding stripe */
+
 .machine-stripe {
   position:absolute; top:0; left:0; right:0; height:4px;
   background:linear-gradient(to right,var(--accent2),var(--accent));
   border-radius:16px 16px 0 0;
 }
-/* Brand label */
+
 .machine-brand {
   position:absolute; top:12px; left:18px;
   font-family:'Exo 2',sans-serif; font-size:11px; font-weight:700; letter-spacing:3px;
@@ -94,7 +93,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
   font-size:9px; letter-spacing:2px; color:var(--muted2); text-transform:uppercase;
 }
 
-/* Porthole */
+
 .porthole {
   position:absolute; top:26px; left:50%; transform:translateX(-50%);
   width:180px; height:180px; border-radius:50%;
@@ -110,12 +109,12 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
   position:absolute; inset:4px; border-radius:50%;
   border:1px solid #1e3050; overflow:hidden;
 }
-/* Glass highlight */
+
 .porthole-glass {
   position:absolute; inset:0; border-radius:50%; pointer-events:none; z-index:10;
   background:radial-gradient(circle at 35% 28%, #ffffff0e 0%, #ffffff03 40%, transparent 70%);
 }
-/* Porthole bolts */
+
 .porthole::after {
   content:'';
   position:absolute; inset:-14px; border-radius:50%;
@@ -126,43 +125,43 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
     radial-gradient(circle at 5% 50%,  #2a4060 0%,#2a4060 3%,transparent 3%);
 }
 
-/* Drum */
+
 .drum { position:absolute; inset:0; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; transition:background 1s; }
 .drum-svg-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
 .drum-svg { transition:none; }
-/* Water */
+
 .water {
   position:absolute; bottom:0; left:0; right:0; border-radius:0 0 50% 50%;
   transition:height 3s ease, background .8s, opacity .8s; pointer-events:none; z-index:1;
 }
-/* Water ripple */
+
 .water-ripple {
   position:absolute; top:-4px; left:-5%; right:-5%; height:8px;
   background:inherit; border-radius:50%; opacity:.5;
   animation:ripple 2s ease-in-out infinite;
 }
 @keyframes ripple { 0%,100%{transform:scaleX(1) translateY(0)} 50%{transform:scaleX(1.04) translateY(-2px)} }
-/* Foam */
+
 .foam {
   position:absolute; top:-2px; left:0; right:0; height:12px;
   background:repeating-linear-gradient(90deg,#ffffffaa 0,#ffffffaa 6px,transparent 6px,transparent 12px);
   border-radius:50%; opacity:0; transition:opacity .5s; pointer-events:none; z-index:2;
 }
 
-/* Pipes */
+
 .pipes { position:absolute; inset:0; pointer-events:none; }
 .pipe { position:absolute; }
 .pipe-inlet { top:60px; right:-22px; width:22px; height:70px; background:linear-gradient(to right,#1a2030,#202a3a); border-radius:0 6px 6px 0; border:1px solid #223050; border-left:none; }
 .pipe-outlet { top:60px; left:-22px; width:22px; height:70px; background:linear-gradient(to left,#1a2030,#202a3a); border-radius:6px 0 0 6px; border:1px solid #223050; border-right:none; }
 .pipe-drain { bottom:60px; right:-22px; width:22px; height:50px; background:linear-gradient(to right,#151510,#1e1e14); border-radius:0 6px 6px 0; border:1px solid #333020; border-left:none; }
-/* Valve indicator dots */
+
 .valve-dot { position:absolute; width:9px; height:9px; border-radius:50%; border:1px solid #333; transition:background .3s, box-shadow .3s; }
 .vd-inlet { top:88px; right:-29px; }
 .vd-drain { bottom:78px; right:-29px; }
 .valve-on { background:var(--green) !important; box-shadow:0 0 10px var(--green) !important; border-color:var(--green) !important; }
 .valve-drain-on { background:var(--amber) !important; box-shadow:0 0 10px var(--amber) !important; border-color:var(--amber) !important; }
 
-/* Bottom control strip */
+
 .machine-bottom { position:absolute; bottom:0; left:0; right:0; height:60px; background:#0c1520; border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:8px; }
 .mlight { width:9px; height:9px; border-radius:50%; background:#1a2030; border:1px solid #223; transition:background .3s, box-shadow .3s; flex-shrink:0; }
 .mlight-label { font-size:8px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
@@ -174,17 +173,17 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
   text-shadow:0 0 10px var(--accent);
 }
 
-/* Vibration animations */
+
 @keyframes vib-low  { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-1px,0)} 75%{transform:translate(1px,0)} }
 @keyframes vib-med  { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-2px,-1px)} 75%{transform:translate(2px,1px)} }
 @keyframes vib-high { 0%,100%{transform:translate(0,0)} 12%{transform:translate(-4px,-2px)} 37%{transform:translate(3px,2px)} 62%{transform:translate(-3px,1px)} 87%{transform:translate(4px,-2px)} }
 
-/* Drain particles */
+
 .drain-anim { position:absolute; bottom:68px; right:-36px; width:14px; height:50px; overflow:visible; pointer-events:none; opacity:0; transition:opacity .3s; }
 .dp { position:absolute; width:4px; height:4px; border-radius:50%; background:var(--amber); animation:dpfall 0.9s ease-in infinite; }
 @keyframes dpfall { 0%{opacity:.9;top:0;left:0} 100%{opacity:0;top:44px;left:4px} }
 
-/* Viewport overlays */
+
 .vp-state-badge {
   position:absolute; top:16px; left:16px;
   font-family:'Share Tech Mono',monospace; font-size:13px; font-weight:700;
@@ -206,15 +205,15 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .vp-rpm-num { font-family:'Share Tech Mono',monospace; font-size:32px; color:var(--accent); line-height:1; transition:color .5s; }
 .vp-rpm-unit { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
 
-/* ===== SIDEBAR ===== */
+
 .sidebar { background:var(--panel); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; }
 .sidebar::-webkit-scrollbar { width:4px; } .sidebar::-webkit-scrollbar-track { background:var(--panel); } .sidebar::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
 
-/* Section header */
+
 .sh { font-size:9px; letter-spacing:2.5px; color:var(--muted); text-transform:uppercase; padding:10px 16px 0; border-top:1px solid var(--border); }
 .sh:first-child { border-top:none; }
 
-/* FSM Diagram */
+
 .fsm-wrap { padding:12px 16px; }
 .fsm-graph { position:relative; height:220px; background:#070c14; border-radius:8px; border:1px solid var(--border); overflow:hidden; }
 .fsm-node {
@@ -232,7 +231,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .fn-SPIN  { color:#cc44ff; border-color:#662288; left:280px; top:80px; }
 .fn-FAULT { color:#ff4455; border-color:#882233; left:280px; top:170px; }
 
-/* Controls */
+
 .ctrl-wrap { padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
 .btn-row { display:flex; gap:7px; }
 .btn {
@@ -256,7 +255,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .btn-reset { color:var(--muted2); border-color:var(--border2); }
 .btn-reset:hover { background:#ffffff10; }
 
-/* Intensity */
+
 .int-row { display:flex; gap:6px; }
 .int-btn {
   flex:1; padding:6px 2px; border-radius:5px; border:1px solid var(--border);
@@ -266,7 +265,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .int-btn:hover { color:var(--text); border-color:var(--border2); }
 .int-btn.sel { color:var(--accent); border-color:var(--accent); background:#00d4ff12; }
 
-/* Sensor display */
+
 .sensor-row { display:flex; gap:6px; padding:10px 16px; }
 .sensor {
   flex:1; padding:7px 4px; border-radius:6px; border:1px solid var(--border);
@@ -280,7 +279,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .sensor.warn .sensor-val { color:var(--red); }
 .sensor.neutral .sensor-val { color:var(--muted2); }
 
-/* Timer inputs */
+
 .timers-wrap { padding:8px 16px 12px; display:flex; flex-direction:column; gap:6px; }
 .timer-row { display:flex; align-items:center; gap:8px; }
 .timer-lbl { font-size:10px; letter-spacing:1px; color:var(--muted2); text-transform:uppercase; flex:1; }
@@ -293,11 +292,10 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 }
 .timer-inp:focus { outline:none; border-color:var(--accent); }
 .timer-unit { font-size:9px; color:var(--muted); letter-spacing:1px; min-width:18px; }
-/* Progress per state */
+
 .timer-prog { flex:2; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
 .timer-prog-fill { height:100%; border-radius:2px; width:0%; transition:width .5s linear; }
 
-/* I/O Status */
 .io-wrap { padding:8px 16px 12px; display:flex; flex-direction:column; gap:5px; }
 .io-row { display:flex; justify-content:space-between; align-items:center; }
 .io-lbl { font-size:10px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; }
@@ -310,7 +308,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .prog-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:6px; }
 .prog-fill { height:100%; border-radius:2px; width:0%; transition:width .5s linear, background .5s; }
 
-/* Log */
+
 .log-wrap { padding:8px 16px 12px; flex:1; display:flex; flex-direction:column; min-height:0; }
 .log-box {
   flex:1; min-height:90px; max-height:130px; background:var(--card);
@@ -321,7 +319,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .ll { margin-bottom:3px; line-height:1.4; }
 .ll.info { color:#44aaff; } .ll.ok { color:var(--green); } .ll.warn { color:var(--amber); } .ll.err { color:var(--red); } .ll.sys { color:var(--muted2); }
 
-/* ===== REPORT MODAL ===== */
+
 .modal-bg { position:fixed; inset:0; background:#000d; display:none; align-items:center; justify-content:center; z-index:200; backdrop-filter:blur(4px); }
 .modal-bg.open { display:flex; }
 .modal {
@@ -346,7 +344,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 }
 .close-btn:hover { background:#00d4ff15; }
 
-/* ===== FAULT FLASH ===== */
+
 @keyframes fault-flash { 0%,100%{opacity:0} 50%{opacity:.3} }
 .fault-overlay { position:fixed; inset:0; background:var(--red); opacity:0; pointer-events:none; z-index:50; animation:none; }
 .fault-overlay.active { animation:fault-flash .4s ease-in-out 3; }
