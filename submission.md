@@ -8,12 +8,12 @@
 ---
 
 ## LinkedIn Post URL
-> _Add your LinkedIn post URL here after posting_
+https://www.linkedin.com/posts/dharshini-sampathkumar-668466330_hackathon-fsm-mechatronics-share-7465691682609569793-D-Tv/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAFNcgjAB6h-JQarDiWj2lXYHW2aQs8qJXM4
 
 ---
 
 ## Video Demo URL
-> _Add your video demo URL here after recording_
+
 
 ---
 
